@@ -1,6 +1,7 @@
 cc_defaults {
     name: "arm-optimized-routines-defaults",
     host_supported: true,
+    sdclang: false,
     cflags: [
         "-Werror",
         "-Wno-unused-parameter",
