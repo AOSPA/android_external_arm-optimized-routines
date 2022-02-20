@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "022abed8_10e34db0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000012
+      },
+      "writtenOn": "2022-02-20T05:29:14Z",
+      "side": 1,
+      "message": "should be fine, but depends on https://github.com/xboxfanj/android_external_arm-optimized-routines/commit/2a75e397a64e96f494e2988ce1338e745a962b5c",
+      "revId": "7c73b373afee787b195298f4db42468f84ebab8b",
+      "serverId": "3162e3d8-d894-470e-abd9-724f7b0effad"
+    }
+  ]
+}
