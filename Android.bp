@@ -77,7 +77,6 @@ cc_library_static {
         "math/erf_data.c",
         "math/erff.c",
         "math/erff_data.c",
-        "math/tgamma128.c",
     ],
     srcs: [
         "math/*.c",
