@@ -1,7 +1,7 @@
 /*
  * Function entries for ulp.
  *
- * Copyright (c) 2022-2024, Arm Limited.
+ * Copyright (c) 2022-2025, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 /* clang-format off */
@@ -46,9 +46,23 @@ SVF (_ZGVsMxvl8_modf_int, sv_modf_int, modfl_int, modf_mpfr_int, 1, 0, d1, 0)
 #if WANT_EXPERIMENTAL_MATH
  F (arm_math_erff, arm_math_erff, erf, mpfr_erf, 1, 1, f1, 0)
  F (arm_math_erf,  arm_math_erf,  erfl, mpfr_erf, 1, 0, d1, 0)
+# if __aarch64__ && __linux__
+ F (arm_math_advsimd_fast_cosf, Z_fast_cosf, cos, mpfr_cos, 1, 1, f1, 0)
+ F (arm_math_advsimd_fast_sinf, Z_fast_sinf, sin, mpfr_sin, 1, 1, f1, 0)
+ F (arm_math_advsimd_fast_powf, Z_fast_powf, pow, mpfr_pow, 2, 1, f2, 1)
+ F (arm_math_advsimd_fast_expf, Z_fast_expf, exp, mpfr_exp, 1, 1, f1, 0)
+# endif
+# if WANT_SVE_TESTS
+ SVF (arm_math_sve_fast_cosf, Z_sv_fast_cosf, cos, mpfr_cos, 1, 1, f1, 0)
+ SVF (arm_math_sve_fast_sinf, Z_sv_fast_sinf, sin, mpfr_sin, 1, 1, f1, 0)
+ SVF (arm_math_sve_fast_powf, Z_sv_fast_powf, pow, mpfr_pow, 2, 1, f2, 0)
+ SVF (arm_math_sve_fast_expf, Z_sv_fast_expf, exp, mpfr_exp, 1, 1, f1, 0)
+ SVF (_ZGVsMxvv_powk, Z_sv_powk, ref_powi, wrap_mpfr_powi, 2, 0, d2, 0)
+ SVF (_ZGVsMxvv_powi, Z_sv_powi, ref_powif, wrap_mpfr_powi, 2, 1, f2, 0)
+# endif
 #endif
 
-#if WANT_TRIGPI_TESTS
+#if WANT_C23_TESTS
  F (arm_math_cospif, arm_math_cospif, arm_math_cospi, mpfr_cospi, 1, 1, f1, 0)
  F (arm_math_cospi,  arm_math_cospi,  arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
  F (arm_math_sinpif, arm_math_sinpif, arm_math_sinpi, mpfr_sinpi, 1, 1, f1, 0)
@@ -60,8 +74,21 @@ SVF (_ZGVsMxvl8_modf_int, sv_modf_int, modfl_int, modf_mpfr_int, 1, 0, d1, 0)
  F (arm_math_sincospi_sin, arm_math_sincospi_sin, arm_math_sinpil, mpfr_sinpi, 1, 0, d1, 0)
  F (arm_math_sincospi_cos, arm_math_sincospi_cos, arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
 # if __aarch64__ && __linux__
+ F (_ZGVnN4v_acospif, Z_acospif, arm_math_acospi,  mpfr_acospi, 1, 1, f1, 0)
+ F (_ZGVnN2v_acospi,  Z_acospi,  arm_math_acospil, mpfr_acospi, 1, 0, d1, 0)
+ F (_ZGVnN4v_asinpif, Z_asinpif, arm_math_asinpi,  mpfr_asinpi, 1, 1, f1, 0)
+ F (_ZGVnN2v_asinpi,  Z_asinpi,  arm_math_asinpil, mpfr_asinpi, 1, 0, d1, 0)
+ F (_ZGVnN4v_atanpif, Z_atanpif, arm_math_atanpi,  mpfr_atanpi, 1, 1, f1, 0)
+ F (_ZGVnN2v_atanpi,  Z_atanpi,  arm_math_atanpil, mpfr_atanpi, 1, 0, d1, 0)
+ F (_ZGVnN4vv_atan2pif, Z_atan2pif, arm_math_atan2pi,  mpfr_atan2pi, 2, 1, f2, 0)
+ F (_ZGVnN2vv_atan2pi, Z_atan2pi, arm_math_atan2pil,  mpfr_atan2pi, 2, 0, d2, 0)
  F (_ZGVnN4v_cospif, Z_cospif, arm_math_cospi,  mpfr_cospi, 1, 1, f1, 0)
  F (_ZGVnN2v_cospi,  Z_cospi,  arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
+ F (_ZGVnN2v_exp10m1, Z_exp10m1, arm_math_exp10m1l,  mpfr_exp10m1, 1, 0, d1, 0)
+ F (_ZGVnN4v_exp10m1f, Z_exp10m1f, arm_math_exp10m1,  mpfr_exp10m1, 1, 1, f1, 0)
+ F (_ZGVnN4v_exp2m1f, Z_exp2m1f, arm_math_exp2m1,  mpfr_exp2m1, 1, 1, f1, 0)
+ F (_ZGVnN2v_exp2m1, Z_exp2m1, arm_math_exp2m1l,  mpfr_exp2m1, 1, 0, d1, 0)
+ F (_ZGVnN4v_log2p1f, Z_log2p1f, arm_math_log2p1,  mpfr_log2p1, 1, 1, f1, 0)
  F (_ZGVnN4v_sinpif, Z_sinpif, arm_math_sinpi,  mpfr_sinpi, 1, 1, f1, 0)
  F (_ZGVnN2v_sinpi,  Z_sinpi,  arm_math_sinpil, mpfr_sinpi, 1, 0, d1, 0)
  F (_ZGVnN4v_tanpif, Z_tanpif, arm_math_tanpi,  mpfr_tanpi, 1, 1, f1, 0)
@@ -72,8 +99,20 @@ SVF (_ZGVsMxvl8_modf_int, sv_modf_int, modfl_int, modf_mpfr_int, 1, 0, d1, 0)
  F (_ZGVnN2v_sincospi_cos, v_sincospi_cos, arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
 # endif
 # if WANT_SVE_TESTS
+ SVF (_ZGVsMxv_acospif, Z_sv_acospif, arm_math_acospi,  mpfr_acospi, 1, 1, f1, 0)
+ SVF (_ZGVsMxv_acospi,  Z_sv_acospi,  arm_math_acospil, mpfr_acospi, 1, 0, d1, 0)
+ SVF (_ZGVsMxv_asinpif, Z_sv_asinpif, arm_math_asinpi,  mpfr_asinpi, 1, 1, f1, 0)
+ SVF (_ZGVsMxv_asinpi,  Z_sv_asinpi,  arm_math_asinpil, mpfr_asinpi, 1, 0, d1, 0)
+ SVF (_ZGVsMxv_atanpif, Z_sv_atanpif, arm_math_atanpi,  mpfr_atanpi, 1, 1, f1, 0)
+ SVF (_ZGVsMxv_atanpi,  Z_sv_atanpi,  arm_math_atanpil, mpfr_atanpi, 1, 0, d1, 0)
+ SVF (_ZGVsMxvv_atan2pif, Z_sv_atan2pif, arm_math_atan2pi,  mpfr_atan2pi, 2, 1, f2, 0)
+ SVF (_ZGVsMxvv_atan2pi,  Z_sv_atan2pi,  arm_math_atan2pil, mpfr_atan2pi, 2, 0, d2, 0)
  SVF (_ZGVsMxv_cospif, Z_sv_cospif, arm_math_cospi,  mpfr_cospi, 1, 1, f1, 0)
  SVF (_ZGVsMxv_cospi,  Z_sv_cospi,  arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
+ SVF (_ZGVsMxv_exp10m1f, Z_sv_exp10m1f, arm_math_exp10m1,  mpfr_exp10m1, 1, 1, f1, 0)
+ SVF (_ZGVsMxv_exp10m1,  Z_sv_exp10m1,  arm_math_exp10m1l, mpfr_exp10m1, 1, 0, d1, 0)
+ SVF (_ZGVsMxv_exp2m1f, Z_sv_exp2m1f, arm_math_exp2m1,  mpfr_exp2m1, 1, 1, f1, 0)
+ SVF (_ZGVsMxv_exp2m1,  Z_sv_exp2m1,  arm_math_exp2m1l, mpfr_exp2m1, 1, 0, d1, 0)
  SVF (_ZGVsMxv_sinpif, Z_sv_sinpif, arm_math_sinpi,  mpfr_sinpi, 1, 1, f1, 0)
  SVF (_ZGVsMxv_sinpi,  Z_sv_sinpi,  arm_math_sinpil, mpfr_sinpi, 1, 0, d1, 0)
  SVF (_ZGVsMxv_tanpif, Z_sv_tanpif, arm_math_tanpi,  mpfr_tanpi, 1, 1, f1, 0)
@@ -82,10 +121,6 @@ SVF (_ZGVsMxvl8_modf_int, sv_modf_int, modfl_int, modf_mpfr_int, 1, 0, d1, 0)
  SVF (_ZGVsMxvl4l4_sincospif_cos, sv_sincospif_cos, arm_math_cospi, mpfr_cospi, 1, 1, f1, 0)
  SVF (_ZGVsMxvl8l8_sincospi_sin, sv_sincospi_sin, arm_math_sinpil, mpfr_sinpi, 1, 0, d1, 0)
  SVF (_ZGVsMxvl8l8_sincospi_cos, sv_sincospi_cos, arm_math_cospil, mpfr_cospi, 1, 0, d1, 0)
-#  if WANT_EXPERIMENTAL_MATH
-SVF (_ZGVsMxvv_powk, Z_sv_powk, ref_powi, mpfr_powi, 2, 0, d2, 0)
-SVF (_ZGVsMxvv_powi, Z_sv_powi, ref_powif, mpfr_powi, 2, 1, f2, 0)
-#  endif
 # endif
 #endif
 

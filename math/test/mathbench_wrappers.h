@@ -1,11 +1,15 @@
 /*
  * Function wrappers for mathbench.
  *
- * Copyright (c) 2022-2024, Arm Limited.
+ * Copyright (c) 2022-2025, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #if WANT_EXPERIMENTAL_MATH
+#ifndef M_PIl
+#  define M_PIl 3.141592653589793238462643383279502884l
+#endif
+
 static double
 atan2_wrap (double x)
 {
@@ -19,6 +23,18 @@ atan2f_wrap (float x)
 }
 
 static double
+atan2pi_wrap (double x)
+{
+  return atan2 (5.0, x) / M_PIl;
+}
+
+static float
+atan2pif_wrap (float x)
+{
+  return atan2 (5.0f, x) / M_PIl;
+}
+
+static double
 powi_wrap (double x)
 {
   return __builtin_powi (x, (int) round (x));
@@ -27,6 +43,7 @@ powi_wrap (double x)
 
 #if __aarch64__ && __linux__
 
+#if WANT_C23_TESTS
 __vpcs static float32x4_t
 _Z_sincospif_wrap (float32x4_t x)
 {
@@ -42,6 +59,7 @@ _Z_sincospi_wrap (float64x2_t x)
   _ZGVnN2vl8l8_sincospi (x, s, c);
   return vld1q_f64 (s) + vld1q_f64 (c);
 }
+#endif
 
 __vpcs static float64x2_t
 _Z_atan2_wrap (float64x2_t x)
@@ -53,6 +71,18 @@ __vpcs static float32x4_t
 _Z_atan2f_wrap (float32x4_t x)
 {
   return _ZGVnN4vv_atan2f (vdupq_n_f32 (5.0f), x);
+}
+
+__vpcs static float32x4_t
+_Z_atan2pif_wrap (float32x4_t x)
+{
+  return _ZGVnN4vv_atan2pif (vdupq_n_f32 (5.0f), x);
+}
+
+__vpcs static float64x2_t
+_Z_atan2pi_wrap (float64x2_t x)
+{
+  return _ZGVnN2vv_atan2pi (vdupq_n_f64 (5.0f), x);
 }
 
 __vpcs static float32x4_t
@@ -149,6 +179,28 @@ _Z_cexpi_wrap (float64x2_t x)
   return sc.val[0] + sc.val[1];
 }
 
+# if WANT_EXPERIMENTAL_MATH
+
+__vpcs static float32x4_t
+xy_Z_fast_powf (float32x4_t x)
+{
+  return arm_math_advsimd_fast_powf (x, x);
+}
+
+__vpcs static float32x4_t
+x_Z_fast_powf (float32x4_t x)
+{
+  return arm_math_advsimd_fast_powf (x, vdupq_n_f32 (23.4));
+}
+
+__vpcs static float32x4_t
+y_Z_fast_powf (float32x4_t x)
+{
+  return arm_math_advsimd_fast_powf (vdupq_n_f32 (2.34), x);
+}
+
+# endif
+
 #endif
 
 #if WANT_SVE_TESTS
@@ -163,6 +215,18 @@ static svfloat64_t
 _Z_sv_atan2_wrap (svfloat64_t x, svbool_t pg)
 {
   return _ZGVsMxvv_atan2 (x, svdup_f64 (5.0), pg);
+}
+
+static svfloat32_t
+_Z_sv_atan2pif_wrap (svfloat32_t x, svbool_t pg)
+{
+  return _ZGVsMxvv_atan2pif (x, svdup_f32 (5.0f), pg);
+}
+
+static svfloat64_t
+_Z_sv_atan2pi_wrap (svfloat64_t x, svbool_t pg)
+{
+  return _ZGVsMxvv_atan2pi (x, svdup_f64 (5.0), pg);
 }
 
 static svfloat32_t
@@ -213,6 +277,7 @@ y_Z_sv_pow (svfloat64_t x, svbool_t pg)
   return _ZGVsMxvv_pow (svdup_f64 (2.34), x, pg);
 }
 
+#if WANT_C23_TESTS
 static svfloat32_t
 _Z_sv_sincospif_wrap (svfloat32_t x, svbool_t pg)
 {
@@ -228,6 +293,7 @@ _Z_sv_sincospi_wrap (svfloat64_t x, svbool_t pg)
   _ZGVsMxvl8l8_sincospi (x, s, c, pg);
   return svadd_x (pg, svld1 (pg, s), svld1 (pg, c));
 }
+#endif
 
 static svfloat32_t
 _Z_sv_modff_wrap (svfloat32_t x, svbool_t pg)
@@ -278,6 +344,24 @@ _Z_sv_cexpi_wrap (svfloat64_t x, svbool_t pg)
 # if WANT_EXPERIMENTAL_MATH
 
 static svfloat32_t
+xy_Z_sv_fast_powf (svfloat32_t x, svbool_t pg)
+{
+  return arm_math_sve_fast_powf (x, x, pg);
+}
+
+static svfloat32_t
+x_Z_sv_fast_powf (svfloat32_t x, svbool_t pg)
+{
+  return arm_math_sve_fast_powf (x, svdup_f32 (23.4f), pg);
+}
+
+static svfloat32_t
+y_Z_sv_fast_powf (svfloat32_t x, svbool_t pg)
+{
+  return arm_math_sve_fast_powf (svdup_f32 (2.34f), x, pg);
+}
+
+static svfloat32_t
 _Z_sv_powi_wrap (svfloat32_t x, svbool_t pg)
 {
   return _ZGVsMxvv_powi (x, svcvt_s32_f32_x (pg, x), pg);
@@ -293,7 +377,7 @@ _Z_sv_powk_wrap (svfloat64_t x, svbool_t pg)
 
 #endif
 
-#if __aarch64__
+#if __aarch64__ && WANT_C23_TESTS
 static float
 sincospif_wrap (float x)
 {

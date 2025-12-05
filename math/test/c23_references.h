@@ -1,7 +1,7 @@
 /*
- * Extended precision scalar reference functions for trigpi.
+ * Extended precision scalar reference functions for C23.
  *
- * Copyright (c) 2023-2024, Arm Limited.
+ * Copyright (c) 2023-2025, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
@@ -9,6 +9,15 @@
 
 #ifndef M_PIl
 #  define M_PIl 3.141592653589793238462643383279502884l
+#endif
+#ifndef M_INV_LOG2l
+#  define M_INV_LOG2l 0x1.71547652b82fep+0
+#endif
+#ifndef M_LOG2
+#  define M_LOG2 0x1.62e42fefa39efp-1
+#endif
+#ifndef M_LOG2l
+#  define M_LOG2l 0x1.62e42fefa39ef35793c7673007e6p-1l
 #endif
 
 long double
@@ -103,4 +112,86 @@ arm_math_tanpil (long double x)
     }
 
   return tanl (f * M_PIl);
+}
+
+double
+arm_math_acospi (double x)
+{
+  return acos (x) / M_PIl;
+}
+
+long double
+arm_math_acospil (long double x)
+{
+  return acosl (x) / M_PIl;
+}
+
+double
+arm_math_asinpi (double x)
+{
+  return asin (x) / M_PIl;
+}
+
+long double
+arm_math_asinpil (long double x)
+{
+  return asinl (x) / M_PIl;
+}
+
+double
+arm_math_atanpi (double x)
+{
+  return atan (x) / M_PIl;
+}
+
+long double
+arm_math_atanpil (long double x)
+{
+  return atanl (x) / M_PIl;
+}
+
+double
+arm_math_atan2pi (double x, double y)
+{
+  return atan2 (x, y) / M_PIl;
+}
+
+long double
+arm_math_atan2pil (long double x, long double y)
+{
+  return atan2l (x, y) / M_PIl;
+}
+
+double
+arm_math_exp10m1 (double x)
+{
+  long double xln10 = x * 0x1.26bb1bbb5551582dd4adac5705a6p1l;
+  /* exp10 is a GNU extension, so for comptability, use pow.  */
+  return (fabsl (x) < 0x1p-55) ? xln10 : powl (10, x) - 1.0l;
+}
+
+long double
+arm_math_exp10m1l (long double x)
+{
+  long double xln10 = x * 0x1.26bb1bbb5551582dd4adac5705a6p1l;
+  /* exp10 is a GNU extension, so for comptability, use pow.  */
+  return (fabsl (x) < 0x1p-55) ? xln10 : powl (10, x) - 1.0l;
+}
+
+double
+arm_math_exp2m1 (double x)
+{
+  return (fabs (x) < 0x1p-23) ? x * M_LOG2 : exp2 (x) - 1.0;
+}
+
+long double
+arm_math_exp2m1l (long double x)
+{
+  return (fabsl (x) < 0x1p-52l) ? x * M_LOG2l : exp2l (x) - 1.0l;
+}
+
+double
+arm_math_log2p1 (double x)
+{
+  return log1p (x) * M_INV_LOG2l;
 }
