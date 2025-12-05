@@ -21,8 +21,8 @@
 #define BTI_C		hint	34
 #define BTI_J		hint	36
 /* Return address signing support (pac-ret).  */
-#define PACIASP		hint	25 SEP .cfi_window_save
-#define AUTIASP		hint	29 SEP .cfi_window_save
+#define PACIASP		hint	25 SEP .cfi_negate_ra_state
+#define AUTIASP		hint	29 SEP .cfi_negate_ra_state
 
 /* GNU_PROPERTY_AARCH64_* macros from elf.h.  */
 #define FEATURE_1_AND 0xc0000000
@@ -69,7 +69,7 @@ GNU_PROPERTY (FEATURE_1_AND, FEATURE_1_BTI|FEATURE_1_PAC)
   _ ## name:
 
 # define END(name)	.cfi_endproc
-#elif defined (_WIN32)
+#elif defined (_WIN32) || defined (__CYGWIN__)
 # define ENTRY_ALIAS(name)	\
   .global name		   SEP  \
   name:

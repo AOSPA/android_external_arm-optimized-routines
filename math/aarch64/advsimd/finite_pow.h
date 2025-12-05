@@ -1,13 +1,17 @@
 /*
- * Double-precision x^y function.
+ * Scalar double-precision x^y helper functions used for fallbacks in
+ * vector implementations.
  *
- * Copyright (c) 2018-2024, Arm Limited.
+ * Copyright (c) 2018-2025, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "math_config.h"
 
-/* Scalar version of pow used for fallbacks in vector implementations.  */
+#ifndef WANT_V_POW_SIGN_BIAS
+#  error                                                                       \
+      "Cannot use v_pow_inline.h without specifying whether you need sign_bias."
+#endif
 
 /* Data is defined in v_pow_log_data.c.  */
 #define N_LOG (1 << V_POW_LOG_TABLE_BITS)
@@ -115,27 +119,6 @@ special_case (double tmp, uint64_t sbits, uint64_t ki)
   /* Note: sbits is signed scale.  */
   scale = asdouble (sbits);
   y = scale + scale * tmp;
-#if WANT_SIMD_EXCEPT
-  if (fabs (y) < 1.0)
-    {
-      /* Round y to the right precision before scaling it into the subnormal
-	 range to avoid double rounding that can cause 0.5+E/2 ulp error where
-	 E is the worst-case ulp error outside the subnormal range.  So this
-	 is only useful if the goal is better than 1 ulp worst-case error.  */
-      double hi, lo, one = 1.0;
-      if (y < 0.0)
-	one = -1.0;
-      lo = scale - y + scale * tmp;
-      hi = one + y;
-      lo = one - hi + y + lo;
-      y = (hi + lo) - one;
-      /* Fix the sign of 0.  */
-      if (y == 0.0)
-	y = asdouble (sbits & 0x8000000000000000);
-      /* The underflow exception needs to be signaled explicitly.  */
-      force_eval_double (opt_barrier_double (0x1p-1022) * 0x1p-1022);
-    }
-#endif
   y = 0x1p-1022 * y;
   return y;
 }
@@ -158,13 +141,8 @@ exp_inline (double x, double xtail, uint32_t sign_bias)
 	{
 	  /* Note: inf and nan are already handled.  */
 	  /* Skip errno handling.  */
-#if WANT_SIMD_EXCEPT
-	  return asuint64 (x) >> 63 ? __math_uflow (sign_bias)
-				    : __math_oflow (sign_bias);
-#else
 	  double res_uoflow = asuint64 (x) >> 63 ? 0.0 : INFINITY;
 	  return sign_bias ? -res_uoflow : res_uoflow;
-#endif
 	}
       /* Large x is special cased below.  */
       abstop = 0;
@@ -198,7 +176,7 @@ exp_inline (double x, double xtail, uint32_t sign_bias)
 /* Computes exp(x+xtail) where |xtail| < 2^-8/N and |xtail| <= |x|.
    A version of exp_inline that is not inlined and for which sign_bias is
    equal to 0.  */
-static double NOINLINE
+static inline double
 exp_nosignbias (double x, double xtail)
 {
   uint32_t abstop = top12 (x) & 0x7ff;
@@ -209,11 +187,7 @@ exp_nosignbias (double x, double xtail)
 	return 1.0;
       /* Note: inf and nan are already handled.  */
       if (abstop >= top12 (1024.0))
-#if WANT_SIMD_EXCEPT
-	return asuint64 (x) >> 63 ? __math_uflow (0) : __math_oflow (0);
-#else
 	return asuint64 (x) >> 63 ? 0.0 : INFINITY;
-#endif
       /* Large x is special cased below.  */
       abstop = 0;
     }
@@ -269,7 +243,9 @@ zeroinfnan (uint64_t i)
 static double NOINLINE
 pow_scalar_special_case (double x, double y)
 {
+#if WANT_V_POW_SIGN_BIAS
   uint32_t sign_bias = 0;
+#endif
   uint64_t ix, iy;
   uint32_t topx, topy;
 
@@ -302,32 +278,30 @@ pow_scalar_special_case (double x, double y)
       if (unlikely (zeroinfnan (ix)))
 	{
 	  double x2 = x * x;
+#if WANT_V_POW_SIGN_BIAS
 	  if (ix >> 63 && checkint (iy) == 1)
 	    {
 	      x2 = -x2;
 	      sign_bias = 1;
 	    }
-#if WANT_SIMD_EXCEPT
-	  if (2 * ix == 0 && iy >> 63)
-	    return __math_divzero (sign_bias);
 #endif
 	  return iy >> 63 ? 1 / x2 : x2;
 	}
       /* Here x and y are non-zero finite.  */
       if (ix >> 63)
 	{
+#if WANT_V_POW_SIGN_BIAS
 	  /* Finite x < 0.  */
 	  int yint = checkint (iy);
 	  if (yint == 0)
-#if WANT_SIMD_EXCEPT
-	    return __math_invalid (x);
-#else
 	    return __builtin_nan ("");
-#endif
 	  if (yint == 1)
 	    sign_bias = SignBias;
 	  ix &= 0x7fffffffffffffff;
 	  topx &= 0x7ff;
+#else
+	  return __builtin_nan ("");
+#endif
 	}
       if ((topy & 0x7ff) - SmallPowY >= ThresPowY)
 	{
@@ -337,12 +311,7 @@ pow_scalar_special_case (double x, double y)
 	  /* |y| < 2^-65, x^y ~= 1 + y*log(x).  */
 	  if ((topy & 0x7ff) < SmallPowY)
 	    return 1.0;
-#if WANT_SIMD_EXCEPT
-	  return (ix > asuint64 (1.0)) == (topy < 0x800) ? __math_oflow (0)
-							 : __math_uflow (0);
-#else
 	  return (ix > asuint64 (1.0)) == (topy < 0x800) ? INFINITY : 0;
-#endif
 	}
       if (topx == 0)
 	{
@@ -357,5 +326,9 @@ pow_scalar_special_case (double x, double y)
   double hi = log_inline (ix, &lo);
   double ehi = y * hi;
   double elo = y * lo + fma (y, hi, -ehi);
+#if WANT_V_POW_SIGN_BIAS
   return exp_inline (ehi, elo, sign_bias);
+#else
+  return exp_nosignbias (ehi, elo);
+#endif
 }
